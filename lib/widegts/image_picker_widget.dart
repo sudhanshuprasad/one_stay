@@ -19,12 +19,16 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
   int? originalSize;
   int? compressedSize;
 
+  bool isLoading = false; // 🔄 loader state
+
   /// Picks image, compresses it and updates UI
   Future<void> pickAndCompressImage() async {
     final XFile? picked =
         await _picker.pickImage(source: ImageSource.gallery);
 
     if (picked == null) return;
+
+    setState(() => isLoading = true);
 
     final File original = File(picked.path);
     final File compressed =
@@ -35,6 +39,7 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
       compressedImage = compressed;
       originalSize = original.lengthSync();
       compressedSize = compressed.lengthSync();
+      isLoading = false;
     });
   }
 
@@ -45,26 +50,53 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     return Column(
       children: [
         /// Image preview
-        (compressedImage ?? originalImage) != null
-            ? Image.file(
-                compressedImage ?? originalImage!,
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            (compressedImage ?? originalImage) != null
+                ? Image.file(
+                    compressedImage ?? originalImage!,
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  )
+                : Image.asset(
+                    'assets/1stay trans.png',
+                    width: 200,
+                    height: 200,
+                  ),
+
+            /// Loader overlay
+            if (isLoading)
+              Container(
                 width: 200,
                 height: 200,
-                fit: BoxFit.cover,
-              )
-            : Image.asset(
-                'assets/1stay trans.png',
-                width: 200,
-                height: 200,
+                color: Color.fromARGB(80, 0, 0, 0),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                  ),
+                ),
               ),
+          ],
+        ),
 
         const SizedBox(height: 12),
 
         /// Upload button
         ElevatedButton.icon(
-          onPressed: pickAndCompressImage,
-          icon: const Icon(Icons.upload),
-          label: const Text('Upload Image'),
+          onPressed: isLoading ? null : pickAndCompressImage,
+          icon: isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.upload),
+          label: Text(isLoading ? 'Compressing...' : 'Upload Image'),
         ),
 
         const SizedBox(height: 12),

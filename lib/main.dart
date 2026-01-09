@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 void main() {
   runApp(const MyApp());
@@ -55,6 +57,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  File? _image;
+
+  final ImagePicker _picker = ImagePicker();
 
   void _incrementCounter() {
     setState(() {
@@ -65,6 +70,18 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+  }
+
+  Future<void> _pickImage() async {
+    print('Picking Image');
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      setState(() {
+        _image = File(pickedImage.path);
+      });
+    }
   }
 
   @override
@@ -102,14 +119,46 @@ class _MyHomePageState extends State<MyHomePage> {
           // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
           // action in the IDE, or press "p" in the console), to see the
           // wireframe for each widget.
-          mainAxisAlignment: .center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            _image != null
+                ? Image.file(
+                    _image!,
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  )
+                : Image.asset(
+                    'assets/1stay trans.png',
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  ),
+
+            const SizedBox(height: 12),
+
+            ElevatedButton.icon(
+              onPressed: _pickImage,
+              icon: const Icon(Icons.upload),
+              label: const Text('Upload Image'),
+            ),
+
+            const SizedBox(height: 20),
+
             const Text('You have pushed the button this many times:'),
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ],
+
+          // children: [
+          //   const Text('You have pushed the button this many times:'),
+          //   Text(
+          //     '$_counter',
+          //     style: Theme.of(context).textTheme.headlineMedium,
+          //   ),
+          // ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
